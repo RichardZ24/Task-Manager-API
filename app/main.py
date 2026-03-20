@@ -53,4 +53,12 @@ def update_task_completion(id: int, task: TaskCompletion):
     return {"message" : "Task was not found, please enter a valid task id."}
     
 
-
+@app.delete("/tasks/{id}")
+def delete_task(id: int):
+    # index based for loop for good practise when modifying a looping list. (unecessary for this instance)
+    for i, stored_task in enumerate(tasks):
+        if (id == stored_task.id):
+            tasks.pop(i)
+            return {"message" : "Task successfully removed"}
+    return {"message" : "Task not found"}
+    
