@@ -61,4 +61,11 @@ def delete_task(id: int):
             tasks.pop(i)
             return {"message" : "Task successfully removed"}
     return {"message" : "Task not found"}
-    
+
+
+@app.get("/tasks/{id}")
+def get_task(id: int):
+    for stored_task in tasks:
+        if (id == stored_task.id):
+            return {"task" : stored_task}
+    return {"message" : "Task not found"}
