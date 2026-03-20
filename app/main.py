@@ -11,12 +11,15 @@ class Task(BaseModel):
     completed: bool
 
 class TaskCompletion(BaseModel):
-    id: int
     completed: bool
 
 @app.get("/")
 def read_root():
     return{"message": "API running"}
+
+@app.get("/health")
+def health_check():
+    return {"status" : "ok"}
 
 tasks = []
 
@@ -33,22 +36,21 @@ def create_task(task: TaskCreate):
     tasks.append(Task(title = task.title, id = new_task_id, completed = False))
     return {"message": "Task added", "tasks": tasks}
 
-@app.put("/tasks/id")
-def update_task_completion(task: TaskCompletion):
-    target_id = task.id
+@app.put("/tasks/{id}")
+def update_task_completion(id: int, task: TaskCompletion):
     new_state = task.completed
    
     for stored_task in tasks:
 
-        if (target_id != stored_task.id):
+        if (id != stored_task.id):
             continue
 
         if (new_state == stored_task.completed):
-            return {"message" : f"Task is already marked as {"complete" if (new_state == True) else "incomplete"}.", "tasks:": tasks}
+            return {"message" : f"Task is already marked as {'complete' if (new_state) else 'incomplete'}.", "updated task": task}
         
         stored_task.completed = new_state
-        return {"message" : f"Task is marked as {"complete" if (new_state == True) else "incomplete"}", "tasks": tasks}
-    return {"message" : "Task was not found, please enter a valid task id.", "tasks" : tasks}
+        return {"message" : f"Task is marked as {'complete' if (new_state) else 'incomplete'}", "updated task": task}
+    return {"message" : "Task was not found, please enter a valid task id."}
     
 
 
