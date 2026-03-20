@@ -1,5 +1,23 @@
 from fastapi import FastAPI
 from pydantic import BaseModel
+from dotenv import load_dotenv
+import psycopg
+import os
+
+
+BASE_DIR = os.path.dirname(__file__)
+schema_path = os.path.join(BASE_DIR, "schema.sql")
+
+load_dotenv()
+db_url = os.getenv("DATABASE_URL")
+
+with psycopg.connect(db_url) as conn:
+    with conn.cursor() as cur:
+        cur.execute("SELECT 1")
+        with open(schema_path) as file:
+            cur.execute(file.read())
+
+
 app = FastAPI()
 
 class TaskCreate(BaseModel):
@@ -35,6 +53,11 @@ def create_task(task: TaskCreate):
         new_task_id = tasks[-1].id + 1
     new_task = Task(title = task.title, id = new_task_id, completed = False)
     tasks.append(new_task)
+    with psycopg.connect(db_url) as conn:
+        with conn.cursor() as cur:
+            cur.execute(f"""
+                        INSERT INTO tasks (title, completed)
+                        VALUES (%s, %s)""", (new_task.title, new_task.completed))
     return {"message": "Task added", "task": new_task}
 
 @app.put("/tasks/{id}")
@@ -72,3 +95,5 @@ def get_task(id: int):
         if (id == stored_task.id):
             return {"task" : stored_task}
     return {"message" : "Task not found"}
+
+
